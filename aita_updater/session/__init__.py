@@ -54,6 +54,7 @@ class Session:
                 rd['title'].append(post.title)
                 rd['upvotes'].append(post.ups)
                 rd['created'].append(post.created)
+                rd['vote'].append('NTA')
                 for comment in post.comments:
                     body = comment.body
                     rd['top_comment'].append(body)
