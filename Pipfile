@@ -1,0 +1,17 @@
+[[source]]
+name = "pypi"
+url = "$PYPI_URL"
+verify_ssl = true
+
+[dev-packages]
+pytest = "*"
+pytest-runner = "*"
+
+[packages]
+click = "*"
+aita-updater = {editable = true, path = "."}
+praw = "*"
+python-decouple = "*"
+
+[requires]
+python_version = "3.8"
