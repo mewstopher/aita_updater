@@ -85,8 +85,11 @@ setup(
     url=URL,
     install_requires=REQUIRED,
     extras_requires=EXTRAS,
-    packages=find_packages(include=['aita_updater'],
+    packages=find_packages(include=['aita_updater', 'aita_updater.session'],
                            exclude=["tests", "*.tests", "*tests.*", "tests.*"]),
+    package_dir={
+        'aita_updater': 'aita_updater'
+    },
     package_data={'': []},
     include_package_data=True,
     license='Other/Proprietary License',
@@ -103,7 +106,7 @@ setup(
     tests_require=REQUIRED_TEST,
     entry_points={
         'console_scripts' : [
-            'repo_create=repo_create.cli:main',
+            'aita_updater=aita_updater.cli:main',
         ]
     },
 )

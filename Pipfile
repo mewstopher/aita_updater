@@ -12,6 +12,7 @@ click = "*"
 aita-updater = {editable = true, path = "."}
 praw = "*"
 python-decouple = "*"
+pandas = "*"
 
 [requires]
 python_version = "3.8"

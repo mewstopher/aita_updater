@@ -1,5 +1,7 @@
-import praw
 from decouple import config
+import pandas as pd
+import praw
+
 
 class Session:
     def __init__(self, subreddit):
@@ -19,7 +21,7 @@ class Session:
                              )
         return reddit
 
-    def get_subreddit(self, n_posts):
+    def get_top_posts(self, n_posts):
         """
         get n submissions from a subreddit
 
@@ -27,7 +29,7 @@ class Session:
         top_n = self.subreddit.hot(limit=n_posts)
         return top_n
 
-    def parse_results(self):
+    def parse_results(self, n_posts):
         """
         get wanted data from posts
         """
@@ -37,7 +39,7 @@ class Session:
               'created': [],
               'top_comment': [],
               }
-        top_posts = get_top_posts(n_posts)
+        top_posts = self.get_top_posts(n_posts)
         parsed_rd = self.expand_results(rd, top_posts)
         return parsed_rd
 
@@ -58,4 +60,12 @@ class Session:
                     break
         return rd
 
-
+    def convert_results(self, n_posts):
+        """
+        convert results to a pandas dataframe
+        :param rd: dict
+        :return:
+        """
+        results: dict = self.parse_results(n_posts)
+        results_df = pd.DataFrame(results)
+        return results_df
