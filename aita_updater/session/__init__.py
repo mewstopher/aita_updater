@@ -7,6 +7,7 @@ class Session:
     def __init__(self, subreddit):
         self.reddit = self.authenticate()
         self.subreddit = self.reddit.subreddit(subreddit)
+        self.results_dict = self.create_results()
 
     def authenticate(self):
         """
@@ -21,52 +22,84 @@ class Session:
                              )
         return reddit
 
-    def get_top_posts(self, n_posts):
-        """
-        get n submissions from a subreddit
-
-        """
-        top_n = self.subreddit.hot(limit=n_posts)
-        return top_n
-
-    def parse_results(self, n_posts):
+    def create_results(self):
         """
         get wanted data from posts
         """
-        rd = {'title': [],
+        results_dict = {'title': [],
               'upvotes': [],
               'vote': [],
               'created': [],
               'top_comment': [],
               }
-        top_posts = self.get_top_posts(n_posts)
-        parsed_rd = self.expand_results(rd, top_posts)
-        return parsed_rd
+        return results_dict
 
-    def expand_results(self, rd, top_posts):
+    def get_posts(self, n_posts: int):
+        """
+        pull posts from reddit
+        :return:
+        """
+        top_posts = self.subreddit.hot(limit=n_posts)
+        return top_posts
+
+    def update_results(self, top_posts):
         """
         expand results and grab needed
         attributes
-        :return: rd
+        :return: results_dict
         """
+        results_dict = self.results_dict
         for post in top_posts:
             if not post.stickied:
-                rd['title'].append(post.title)
-                rd['upvotes'].append(post.ups)
-                rd['created'].append(post.created)
-                rd['vote'].append('NTA')
-                for comment in post.comments:
-                    body = comment.body
-                    rd['top_comment'].append(body)
-                    break
-        return rd
+                results_dict['title'].append(post.title)
+                results_dict['upvotes'].append(post.ups)
+                results_dict['created'].append(post.created)
 
-    def convert_results(self, n_posts):
+                top_comment = self.get_top_comment(post.comments)
+                results_dict['top_comment'].append(top_comment['body'])
+                results_dict['vote'].append(top_comment['vote'])
+        return results_dict
+
+    def get_top_comment(self, comments) -> dict:
         """
-        convert results to a pandas dataframe
-        :param rd: dict
+        get top comment from post comments
+        attach vote to comment if fount
         :return:
         """
-        results: dict = self.parse_results(n_posts)
-        results_df = pd.DataFrame(results)
+        i = 0
+        while i < len(comments):
+            comment_dict = {}
+            comment = comments[i]
+            if not comment.stickied:
+                comment_vote = self.extract_vote(comment.body)
+                if len(comment_vote) == 1:
+                    comment_dict['body'] = comment.body
+                    comment_dict['vote'] = comment_vote
+                    return comment_dict
+            i += 1
+        return
+
+    def extract_vote(self, comment) -> list:
+        """
+        extract NTA, ESH, YTA from
+        top comment
+        :return:
+        #TODO: make this method more robust
+        """
+        vote = []
+        if 'NTA' in comment:
+            vote.append('NTA')
+        if 'ESH' in comment:
+            vote.append('ESH')
+        if 'YTA' in comment:
+            vote.append('YTA')
+
+        return vote
+
+    def convert_results(self):
+        """
+        convert results to a pandas dataframe
+        :return:
+        """
+        results_df = pd.DataFrame(self.results_dict)
         return results_df

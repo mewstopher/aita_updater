@@ -18,7 +18,9 @@ def get_results():
     get sample data
     """
     reddit_session = Session('AmItheAsshole')
-    results = reddit_session.convert_results(100)
+    posts = reddit_session.get_posts(100)
+    parsed_results = reddit_session.update_results(posts)
+    results_df = reddit_session.convert_results()
     return
 
 
