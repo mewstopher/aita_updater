@@ -4,7 +4,7 @@
 import sys
 import click
 from aita_updater.session import Session
-
+from aita_updater.processors import RedditProcessor
 
 @click.group()
 def main(args=None):
@@ -18,9 +18,9 @@ def get_results():
     get sample data
     """
     reddit_session = Session('AmItheAsshole')
-    posts = reddit_session.get_posts(100)
-    parsed_results = reddit_session.update_results(posts)
-    results_df = reddit_session.convert_results()
+    session_data = None
+    processor = RedditProcessor(session_data)
+    processor.run()
     return
 
 
