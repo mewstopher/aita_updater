@@ -18,7 +18,7 @@ def get_results():
     get sample data
     """
     reddit_session = Session('AmItheAsshole')
-    session_data = None
+    session_data = reddit_session.get_posts(5)
     processor = RedditProcessor(session_data)
     processor.run()
     return
