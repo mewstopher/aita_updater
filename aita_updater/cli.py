@@ -5,6 +5,10 @@ import sys
 import click
 from aita_updater.session import Session
 from aita_updater.processors import RedditProcessor
+from logging.config import fileConfig
+
+fileConfig('logging.ini')
+
 
 @click.group()
 def main(args=None):
@@ -19,6 +23,7 @@ def get_results():
     """
     reddit_session = Session('AmItheAsshole')
     session_data = reddit_session.get_posts(5)
+    exit()
     processor = RedditProcessor(session_data)
     processor.run()
     return

@@ -1,10 +1,13 @@
 from decouple import config
 import pandas as pd
+import logging
 import praw
 
 
 class Session:
     def __init__(self, subreddit):
+        self.logger = logging.getLogger(__name__)
+        self.logger.debug(f'{__name__} entered')
         self.reddit = self.authenticate()
         self.subreddit = self.reddit.subreddit(subreddit)
         self.results_dict = self.create_results()
@@ -20,6 +23,7 @@ class Session:
                              username=config("USERNAME"),
                              password=config("PASSWORD")
                              )
+        logging.debug('Successfully authenticated Reddit!')
         return reddit
 
     def create_results(self):
@@ -40,6 +44,8 @@ class Session:
         :return:
         """
         top_posts = self.subreddit.hot(limit=n_posts)
+        self.logger.debug(f'{n_posts} retrieved from the subreddit: '
+                          f'{self.subreddit}')
         return top_posts
 
     def update_results(self, top_posts):
