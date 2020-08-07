@@ -1,6 +1,7 @@
 import pandas as pd
 from aita_updater.db import session_context, db_create_engine
 from aita_models import User, Submission
+from aita_updater.exceptions import NoUserError
 import datetime
 import logging
 
@@ -88,9 +89,12 @@ class RedditProcessor:
             for post in self.unprocessed_data:
                 post_exists = self.find_or_add_post(db_session, post.title)
                 if not post_exists:
-                    user = self.create_or_find_user(db_session, post.author.name)
-                    submission = self.create_submission(post, user.id)
-                    submissions.append(submission)
+                    try:
+                        user = self.create_or_find_user(db_session, post.author.name)
+                        submission = self.create_submission(post, user.id)
+                        submissions.append(submission)
+                    except AttributeError:
+                        self.logger.info('No username found for post.. skipping')
             db_session.add_all(submissions)
             self.logger.debug('New submissions added to DB')
         return
