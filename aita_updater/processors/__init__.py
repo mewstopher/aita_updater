@@ -1,28 +1,16 @@
 import pandas as pd
-from aita_updater.session import Session
 from aita_updater.db import session_context, db_create_engine
 from aita_models import User, Submission
 import datetime
+import logging
 
 
 class RedditProcessor:
 
     def __init__(self, post_data):
+        self.logger = logging.getLogger(__name__)
+        self.logger.debug(f'{__name__} entered')
         self.unprocessed_data = post_data
-
-    def create_results(self) -> dict:
-        """
-        create results dictionary
-        :return: results_dict
-        """
-        results_dict = {
-            'title': [],
-            'upvotes': [],
-            'vote': [],
-            'created': [],
-            'top_comment': [],
-        }
-        return results_dict
 
     def get_user(self, db_session, user_name):
         """
@@ -53,13 +41,16 @@ class RedditProcessor:
         :param user_name:
         :return:
         """
-        found_user = self.get_user(db_session, user_name)
+        found_user: object = self.get_user(db_session, user_name)
         if not found_user:
             new_user = self.create_user(db_session, user_name)
             db_session.add(new_user)
+            self.logger.debug(f'new user {new_user.username} added')
             db_session.flush()
             return new_user
         else:
+            self.logger.debug(f'user {found_user} already exists in Database '
+                              'not adding')
             return found_user
 
     def create_submission(self, post, user_id) -> Submission:
@@ -93,15 +84,14 @@ class RedditProcessor:
         :return:
         """
         with session_context(db_create_engine()) as db_session:
-            users = []
             submissions = []
             for post in self.unprocessed_data:
                 post_exists = self.find_or_add_post(db_session, post.title)
                 if not post_exists:
                     user = self.create_or_find_user(db_session, post.author.name)
                     submission = self.create_submission(post, user.id)
-                    users.append(user)
                     submissions.append(submission)
             db_session.add_all(submissions)
+            self.logger.debug('New submissions added to DB')
         return
 
