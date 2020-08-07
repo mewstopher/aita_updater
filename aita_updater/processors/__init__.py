@@ -13,7 +13,8 @@ class RedditProcessor:
         self.logger.debug(f'{__name__} entered')
         self.unprocessed_data = post_data
 
-    def get_user(self, db_session, user_name):
+    @staticmethod
+    def get_user(db_session, user_name):
         """
         get a result from a single post
         :return:
@@ -23,7 +24,8 @@ class RedditProcessor:
         query_results = query.first()
         return query_results
 
-    def create_user(self, db_session, user_name):
+    @staticmethod
+    def create_user(db_session, user_name):
         """
 
         :param db_session:
@@ -36,13 +38,14 @@ class RedditProcessor:
         }
         return User(**user_info)
 
-    def create_or_find_user(self, db_session, user_name):
+    def create_or_find_user(self, db_session, user_name) -> User:
         """
         create user object
-        :param user_name:
+        :param user_name: reddit username
+        :param db_session: database session
         :return:
         """
-        found_user: object = self.get_user(db_session, user_name)
+        found_user: User = self.get_user(db_session, user_name)
         if not found_user:
             new_user = self.create_user(db_session, user_name)
             db_session.add(new_user)
@@ -54,11 +57,13 @@ class RedditProcessor:
                               'not adding')
             return found_user
 
-    def create_submission(self, post, user_id) -> Submission:
+    @staticmethod
+    def create_submission(post, user_id) -> Submission:
         """
         create submission object
-        :param post:
-        :return:
+        :param post: a single reddit submission/post
+        :param user_id: id of a user from user table
+        :return: Submission: Submission object
         """
         submission = {
             'created': datetime.datetime.utcfromtimestamp(post.created),
@@ -68,20 +73,31 @@ class RedditProcessor:
         }
         return Submission(**submission)
 
-    def find_or_add_post(self, db_session, title) -> bool:
+    @staticmethod
+    def find_or_add_post(db_session, title) -> bool:
         """
         check if post exists in database,
         if it does return the result, else,
-        :return:
+        :return: found_title
+                bool
         """
         query = db_session.query(Submission). \
             filter(Submission.title == title)
         found_title = bool(query.first())
         return found_title
 
+    def create_submission_content(self, db_session, post):
+        """
+
+        :param db_session:
+        :param post:
+        :return:
+        """
+        pass
+
     def run(self):
         """
-        run processor
+        run processor. Adds entries to DB
         :return:
         """
         with session_context(db_create_engine()) as db_session:

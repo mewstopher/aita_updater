@@ -19,12 +19,13 @@ def main(args=None):
 @main.command()
 @click.option('-l', '--limit', help='Number of posts to return at '
               'most', type=int)
-def get_results(limit):
+@click.option('-s', '--sort_by', default='hot', type=str)
+def get_results(limit, sort_by):
     """
     get sample data
     """
     reddit_session = Session('AmItheAsshole')
-    session_data = reddit_session.get_posts(limit)
+    session_data = reddit_session.get_posts(limit, sort_by)
     processor = RedditProcessor(session_data)
     processor.run()
     return
