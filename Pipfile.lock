@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "dd3acc055f927f7d1885c9fac59edb6d3f1c598fce9d72191bc4d05efcb3920b"
+            "sha256": "e01ba334cb7a9aa3ccdb7d68c7738c467d4254a2a54a7988574c4ee346fd6e83"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -17,11 +17,8 @@
     },
     "default": {
         "aita-models": {
-            "hashes": [
-                "sha256:17a040c6e7ecc428819cfffff93529d906f54ed107cc101e099fbfe47afcf63e"
-            ],
-            "path": "./../aita_models/dist/aita_models-0.1.0-py3-none-any.whl",
-            "version": "==0.1.0"
+            "git": "https://github.com/mewstopher/aita_models",
+            "ref": "c79e9499391e91809e5fbd86f9819579110feafa"
         },
         "aita-updater": {
             "editable": true,

@@ -1,9 +1,16 @@
 import pandas as pd
 from aita_updater.db import session_context, db_create_engine
-from aita_models import User, Submission
+from aita_models import User, Submission, SubmissionContent, Vote
 from aita_updater.exceptions import NoUserError
 import datetime
 import logging
+from enum import Enum
+
+
+class Constants(Enum):
+    YTA = 'You\'re the asshole'
+    NTA = 'Not the asshole'
+    ESH = 'Everyone sucks here'
 
 
 class RedditProcessor:
@@ -13,8 +20,31 @@ class RedditProcessor:
         self.logger.debug(f'{__name__} entered')
         self.unprocessed_data = post_data
 
+    def create_vote(self, code: str, description: str) -> Vote:
+        """
+        create vote info
+        :return:
+        """
+        info = {
+            'code': code,
+            'description': description,
+            'dt_updated': datetime.datetime.now()
+            }
+        return Vote(**info)
+
+    def get_votes(self) -> list:
+        """
+        get all three types of vote
+        :return:
+        """
+        votes = []
+        for i in ['NTA', 'YTA', 'ESH']:
+            vote = self.create_vote(i, getattr(Constants, i).value)
+            votes.append(vote)
+        return votes
+
     @staticmethod
-    def get_user(db_session, user_name):
+    def get_user(db_session, user_name) -> User:
         """
         get a result from a single post
         :return:
@@ -25,10 +55,9 @@ class RedditProcessor:
         return query_results
 
     @staticmethod
-    def create_user(db_session, user_name):
+    def create_user(user_name):
         """
 
-        :param db_session:
         :param user_name:
         :return:
         """
@@ -38,7 +67,7 @@ class RedditProcessor:
         }
         return User(**user_info)
 
-    def create_or_find_user(self, db_session, user_name) -> User:
+    def create_or_find_user(self, db_session, user_name: str):
         """
         create user object
         :param user_name: reddit username
@@ -47,7 +76,7 @@ class RedditProcessor:
         """
         found_user: User = self.get_user(db_session, user_name)
         if not found_user:
-            new_user = self.create_user(db_session, user_name)
+            new_user = self.create_user(user_name)
             db_session.add(new_user)
             self.logger.debug(f'new user {new_user.username} added')
             db_session.flush()
@@ -86,14 +115,20 @@ class RedditProcessor:
         found_title = bool(query.first())
         return found_title
 
-    def create_submission_content(self, db_session, post):
+    def create_submission_content(self, post, submission_id):
         """
-
-        :param db_session:
+        :param submission_id:
         :param post:
         :return:
         """
-        pass
+        info = {
+            'submission_id': submission_id,
+            'body': post.selftext,
+            'vote_id': 1,
+            'upvotes': post.ups,
+            'dt_updated': datetime.datetime.now()
+        }
+        return SubmissionContent(**info)
 
     def run(self):
         """
@@ -101,17 +136,23 @@ class RedditProcessor:
         :return:
         """
         with session_context(db_create_engine()) as db_session:
-            submissions = []
+            submission_contents = []
+            votes = self.get_votes()
+            db_session.add_all(votes)
             for post in self.unprocessed_data:
                 post_exists = self.find_or_add_post(db_session, post.title)
                 if not post_exists:
                     try:
                         user = self.create_or_find_user(db_session, post.author.name)
                         submission = self.create_submission(post, user.id)
-                        submissions.append(submission)
+                        db_session.add(submission)
+                        db_session.flush()
+                        submission_content = self.create_submission_content(post, submission.id)
+                        submission_contents.append(submission_content)
                     except AttributeError:
                         self.logger.info('No username found for post.. skipping')
-            db_session.add_all(submissions)
+            db_session.add_all(submission_contents)
+
             self.logger.debug('New submissions added to DB')
         return
 

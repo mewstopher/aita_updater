@@ -14,8 +14,8 @@ praw = "*"
 python-decouple = "*"
 pandas = "*"
 sqlalchemy = "*"
-aita-models = {path = "./../aita_models/dist/aita_models-0.1.0-py3-none-any.whl"}
 psycopg2-binary = "*"
+aita-models = {git = "https://github.com/mewstopher/aita_models"}
 
 [requires]
 python_version = "3.8"
